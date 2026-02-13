@@ -4,8 +4,7 @@
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
 		<title>Simple Game</title>
-		<style>
-			body {
+	<style>			body {
 				background: #222;
 			}
 
@@ -61,13 +60,42 @@
 				position: relative;
 				overflow: hidden;
 			}
+
+			#startButton {
+				display: block;
+				margin: 20px auto;
+				padding: 10px 20px;
+				font-size: 18px;
+				background: #191d24;
+				color: rgb(232, 232, 232);
+				border: none;
+				border-radius: 5px;
+				cursor: pointer;
+				font-family: monospace;
+			}
+
+			#levelMessage {
+				position: fixed;
+				top: 50%;
+				left: 50%;
+				transform: translate(-50%, -50%);
+				background: rgba(42, 42, 42, 0.8);
+				color: #475a7e;
+				font-size: 36px;
+				padding: 20px 40px;
+				border-radius: 10px;
+				font-family: monospace;
+				z-index: 1000;
+				display: none;
+				text-align: center;
+			}
 		</style>
 	</head>
 	<body>
 		<h2>Simple JavaScript Game</h2>
-
-		<script>
-			var LEVELS = [
+		<button id="startButton">Start Game</button>
+		<div id="levelMessage"></div>
+		<script>			var LEVELS = [
 				[
 					'                                                                                ',
 					'                                                                                ',
@@ -397,8 +425,7 @@
 						actor.pos.x < other.pos.x + other.size.x &&
 						actor.pos.y + actor.size.y > other.pos.y &&
 						actor.pos.y < other.pos.y + other.size.y
-					)
-						return other;
+					) return other;
 				}
 			};
 
@@ -528,14 +555,23 @@
 
 			var arrows = trackKeys(arrowCodes);
 
-			function runLevel(level, Display, andThen) {
+			function showLevelMessage(message) {
+				var messageElement = document.getElementById('levelMessage');
+				messageElement.textContent = message;
+				messageElement.style.display = 'block';
+				setTimeout(function() {
+					messageElement.style.display = 'none';
+				}, 4000);
+			}
+
+			function runLevel(level, Display, levelNumber, andThen) {
 				var display = new Display(document.body, level);
 				runAnimation(function (step) {
 					level.animate(step, arrows);
 					display.drawFrame(step);
 					if (level.isFinished()) {
 						display.clear();
-						if (andThen) andThen(level.status);
+						if (andThen) andThen(level.status, levelNumber);
 						return false;
 					}
 				});
@@ -543,16 +579,26 @@
 
 			function runGame(plans, Display) {
 				function startLevel(n) {
-					runLevel(new Level(plans[n]), Display, function (status) {
-						if (status == 'lost') startLevel(n);
-						else if (n < plans.length - 1) startLevel(n + 1);
-						else alert('You win!');
+					runLevel(new Level(plans[n]), Display, n+1, function (status, levelNumber) {
+						if (status == 'lost') {
+							startLevel(n);
+						} else if (n < plans.length - 1) {
+							showLevelMessage('Congratulations! You completed Level ' + levelNumber);
+							setTimeout(function() {
+								startLevel(n + 1);
+							}, 4000);
+						} else {
+							showLevelMessage('🎉 Congratulations! You completed all levels! 🎉\nYou are a true game master!');
+						}
 					});
 				}
 				startLevel(0);
 			}
 
-			runGame(LEVELS, DOMDisplay);
-		</script>
+			document.getElementById('startButton').addEventListener('click', function() {
+				this.style.display = 'none';
+				runGame(LEVELS, DOMDisplay);
+			});
+</script>
 	</body>
 </html>
