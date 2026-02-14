@@ -3,15 +3,199 @@
 	<head>
 		<meta charset="UTF-8" />
 		<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
 		<title>Simple Game</title>
-	<style>			body {
-				background: #222;
+		<style>
+			* {
+				margin: 0;
+				padding: 0;
+				box-sizing: border-box;
+			}
+
+			body {
+				background: #111;
+				overflow-x: hidden;
+			}
+
+			#lavaCanvas {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				z-index: 0;
+				transition: opacity 1.5s ease;
+			}
+
+			#startScreen {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				display: flex;
+				flex-direction: column;
+				justify-content: center;
+				align-items: center;
+				z-index: 10;
+				transition: opacity 1s ease, transform 1s ease;
+			}
+
+			#startScreen.hidden {
+				opacity: 0;
+				transform: scale(1.1);
+				pointer-events: none;
+			}
+
+			.game-title {
+				font-family: 'Courier New', monospace;
+				font-size: 64px;
+				font-weight: bold;
+				color: #fff;
+				text-shadow: 0 0 20px #e55, 0 0 40px #e55, 0 0 80px #a33, 0 4px 8px rgba(0,0,0,0.8);
+				margin-bottom: 10px;
+				letter-spacing: 4px;
+				animation: titlePulse 3s ease-in-out infinite;
+				text-align: center;
+			}
+
+			.game-subtitle {
+				font-family: 'Courier New', monospace;
+				font-size: 18px;
+				color: #e8a838;
+				text-shadow: 0 0 10px rgba(232, 168, 56, 0.5);
+				margin-bottom: 50px;
+				letter-spacing: 6px;
+				animation: subtitleFade 2s ease-in-out infinite alternate;
+			}
+
+			@keyframes titlePulse {
+				0%, 100% { transform: scale(1); text-shadow: 0 0 20px #e55, 0 0 40px #e55, 0 0 80px #a33, 0 4px 8px rgba(0,0,0,0.8); }
+				50% { transform: scale(1.03); text-shadow: 0 0 30px #f77, 0 0 60px #e55, 0 0 100px #c44, 0 4px 8px rgba(0,0,0,0.8); }
+			}
+
+			@keyframes subtitleFade {
+				0% { opacity: 0.6; }
+				100% { opacity: 1; }
+			}
+
+			#startButton {
+				display: block;
+				padding: 18px 60px;
+				font-size: 22px;
+				background: linear-gradient(135deg, #e55 0%, #c33 50%, #a22 100%);
+				color: #fff;
+				border: 2px solid #f77;
+				border-radius: 50px;
+				cursor: pointer;
+				font-family: 'Courier New', monospace;
+				font-weight: bold;
+				letter-spacing: 3px;
+				text-transform: uppercase;
+				transition: all 0.3s ease;
+				box-shadow: 0 0 20px rgba(229, 85, 85, 0.4), 0 8px 25px rgba(0,0,0,0.5);
+				position: relative;
+				overflow: hidden;
+				z-index: 11;
+			}
+
+			#startButton::before {
+				content: '';
+				position: absolute;
+				top: -50%;
+				left: -50%;
+				width: 200%;
+				height: 200%;
+				background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, transparent 60%);
+				transform: rotate(45deg);
+				transition: all 0.5s ease;
+			}
+
+			#startButton:hover {
+				transform: translateY(-3px) scale(1.05);
+				box-shadow: 0 0 40px rgba(229, 85, 85, 0.7), 0 12px 35px rgba(0,0,0,0.6);
+				background: linear-gradient(135deg, #f77 0%, #e55 50%, #c33 100%);
+				border-color: #faa;
+			}
+
+			#startButton:active {
+				transform: translateY(0) scale(0.98);
+				box-shadow: 0 0 15px rgba(229, 85, 85, 0.3), 0 4px 15px rgba(0,0,0,0.4);
+			}
+
+			.controls-info {
+				margin-top: 40px;
+				display: flex;
+				gap: 20px;
+				opacity: 0.8;
+			}
+
+			.key-hint {
+				display: flex;
+				flex-direction: column;
+				align-items: center;
+				gap: 6px;
+			}
+
+			.key-box {
+				width: 50px;
+				height: 50px;
+				background: rgba(255,255,255,0.1);
+				border: 2px solid rgba(255,255,255,0.25);
+				border-radius: 8px;
+				display: flex;
+				align-items: center;
+				justify-content: center;
+				font-family: 'Courier New', monospace;
+				font-size: 20px;
+				color: #ddd;
+				backdrop-filter: blur(5px);
+				transition: all 0.3s ease;
+			}
+
+			.key-box:hover {
+				background: rgba(229, 85, 85, 0.2);
+				border-color: #e55;
+				transform: translateY(-3px);
+				box-shadow: 0 5px 15px rgba(229,85,85,0.3);
+			}
+
+			.key-label {
+				font-family: 'Courier New', monospace;
+				font-size: 11px;
+				color: #888;
+				text-transform: uppercase;
+				letter-spacing: 1px;
+			}
+
+			.particles-container {
+				position: fixed;
+				top: 0;
+				left: 0;
+				width: 100%;
+				height: 100%;
+				pointer-events: none;
+				z-index: 5;
+			}
+
+			.particle {
+				position: absolute;
+				border-radius: 50%;
+				pointer-events: none;
+				animation: floatUp linear forwards;
+			}
+
+			@keyframes floatUp {
+				0% { opacity: 1; transform: translateY(0) scale(1); }
+				100% { opacity: 0; transform: translateY(-200px) scale(0); }
 			}
 
 			h2 {
 				color: #666;
 				font-family: monospace;
 				text-align: center;
+				position: relative;
+				z-index: 1;
 			}
 
 			.background {
@@ -59,19 +243,7 @@
 			.game {
 				position: relative;
 				overflow: hidden;
-			}
-
-			#startButton {
-				display: block;
-				margin: 20px auto;
-				padding: 10px 20px;
-				font-size: 18px;
-				background: #191d24;
-				color: rgb(232, 232, 232);
-				border: none;
-				border-radius: 5px;
-				cursor: pointer;
-				font-family: monospace;
+				z-index: 2;
 			}
 
 			#levelMessage {
@@ -79,23 +251,368 @@
 				top: 50%;
 				left: 50%;
 				transform: translate(-50%, -50%);
-				background: rgba(42, 42, 42, 0.8);
-				color: #475a7e;
-				font-size: 36px;
-				padding: 20px 40px;
-				border-radius: 10px;
-				font-family: monospace;
+				background: rgba(20, 20, 20, 0.9);
+				color: #f77;
+				font-size: 32px;
+				padding: 30px 50px;
+				border-radius: 15px;
+				font-family: 'Courier New', monospace;
 				z-index: 1000;
 				display: none;
 				text-align: center;
+				border: 2px solid rgba(229, 85, 85, 0.4);
+				box-shadow: 0 0 40px rgba(229, 85, 85, 0.3), inset 0 0 40px rgba(0,0,0,0.5);
+				animation: messageAppear 0.5s ease;
 			}
+
+			@keyframes messageAppear {
+				0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+				100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+			}
+
+			#levelIndicator {
+				position: fixed;
+				top: 15px;
+				right: 20px;
+				font-family: 'Courier New', monospace;
+				font-size: 16px;
+				color: #e55;
+				z-index: 100;
+				padding: 8px 16px;
+				background: rgba(0,0,0,0.6);
+				border-radius: 20px;
+				border: 1px solid rgba(229,85,85,0.3);
+				display: none;
+			}
+
+			.mouse-glow {
+				position: fixed;
+				width: 300px;
+				height: 300px;
+				border-radius: 50%;
+				background: radial-gradient(circle, rgba(229,85,85,0.08) 0%, transparent 70%);
+				pointer-events: none;
+				z-index: 4;
+				transform: translate(-50%, -50%);
+				transition: left 0.1s ease, top 0.1s ease;
+			}
+			/* ===== FOOTER ===== */
+footer {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  text-align: center;
+  padding: 10px 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 14px;
+  z-index: 40; /* below touch controls if any, above lava canvas (z-index 0) */
+  pointer-events: none; /* allow clicks to pass through to game */
+}
+
+footer a {
+  color: #e55; /* lava red */
+  text-decoration: none;
+  pointer-events: auto; /* make links clickable */
+}
+
+footer a:hover {
+  text-decoration: underline;
+  color: #f77;
+}
+
+.footer-content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.creator {
+  margin: 0;
+  font-size: 14px;
+}
+
+.creator-name {
+  font-weight: bold;
+}
+
+.social-icons {
+  display: flex;
+  gap: 15px;
+  margin: 5px 0;
+}
+
+.social-icon {
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  transition: color 0.3s ease;
+  pointer-events: auto;
+}
+
+.social-icon:hover {
+  color: #e55; /* lava red */
+}
+
+.copyright {
+  margin: 0;
+  font-size: 12px;
+  opacity: 0.7;
+}
+
+/* Adjust for mobile */
+@media (max-width: 600px) {
+  footer {
+    padding: 5px 0;
+    font-size: 12px;
+  }
+  .social-icon {
+    font-size: 16px;
+  }
+}
 		</style>
 	</head>
 	<body>
-		<h2>Simple JavaScript Game</h2>
-		<button id="startButton">Start Game</button>
+		<canvas id="lavaCanvas"></canvas>
+		<div class="particles-container" id="particlesContainer"></div>
+		<div class="mouse-glow" id="mouseGlow"></div>
+
+		<div id="startScreen">
+			<div class="game-title"> LAVA RUN </div>
+			<div class="game-subtitle">SURVIVE THE HEAT</div>
+			<button id="startButton">▶ PLAY</button>
+			<div class="controls-info">
+				<div class="key-hint">
+					<div class="key-box">←</div>
+					<div class="key-label">Left</div>
+				</div>
+				<div class="key-hint">
+					<div class="key-box">↑</div>
+					<div class="key-label">Jump</div>
+				</div>
+				<div class="key-hint">
+					<div class="key-box">→</div>
+					<div class="key-label">Right</div>
+				</div>
+			</div>
+		</div>
+
+		<div id="levelIndicator"></div>
 		<div id="levelMessage"></div>
-		<script>			var LEVELS = [
+<!-- FOOTER -->
+<footer>
+  <div class="footer-content">
+    <p class="creator">Created by <a href="https://instai4.github.io/PORT-FOLIO/" target="_blank" class="creator-name">Anurag</a></p>
+    
+    <div class="social-icons">
+      <a href="https://www.instagram.com/inst.ai.4?igsh=MWNqaG15OWQ2MGczMA==" target="_blank" class="social-icon" aria-label="Instagram">
+        <i class="fab fa-instagram"></i>
+      </a>
+      <a href="https://www.facebook.com/share/1DMBwCvzDL/" target="_blank" class="social-icon" aria-label="Facebook">
+        <i class="fab fa-facebook"></i>
+      </a>
+      <a href="https://www.linkedin.com/in/anurag-singh-43230a380/" target="_blank" class="social-icon" aria-label="LinkedIn">
+        <i class="fab fa-linkedin"></i>
+      </a>
+      <a href="https://github.com/instai4" target="_blank" class="social-icon" aria-label="GitHub">
+        <i class="fab fa-github"></i>
+      </a>
+    </div>
+    
+    <p class="copyright"> Feel the heat, beat the game. &copy; 2026 Lava Run</p>
+  </div>
+</footer>
+		<script>
+			// ==================== LAVA BACKGROUND ANIMATION ====================
+			var lavaCanvas = document.getElementById('lavaCanvas');
+			var ctx = lavaCanvas.getContext('2d');
+			var lavaAnimationId;
+
+			function resizeCanvas() {
+				lavaCanvas.width = window.innerWidth;
+				lavaCanvas.height = window.innerHeight;
+			}
+			resizeCanvas();
+			window.addEventListener('resize', resizeCanvas);
+
+			// Simplex-like noise using sine combinations
+			var lavaTime = 0;
+			var lavaBlobs = [];
+			for (var i = 0; i < 12; i++) {
+				lavaBlobs.push({
+					x: Math.random() * window.innerWidth,
+					y: Math.random() * window.innerHeight,
+					radius: 80 + Math.random() * 150,
+					speedX: (Math.random() - 0.5) * 1.5,
+					speedY: (Math.random() - 0.5) * 1.2,
+					phase: Math.random() * Math.PI * 2,
+					pulseSpeed: 0.5 + Math.random() * 1.5,
+				});
+			}
+
+			function drawLavaBackground(timestamp) {
+				lavaTime += 0.008;
+				var w = lavaCanvas.width;
+				var h = lavaCanvas.height;
+
+				// Dark gradient base
+				var bgGrad = ctx.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, Math.max(w, h) * 0.7);
+				bgGrad.addColorStop(0, '#1a0505');
+				bgGrad.addColorStop(0.5, '#0d0202');
+				bgGrad.addColorStop(1, '#050000');
+				ctx.fillStyle = bgGrad;
+				ctx.fillRect(0, 0, w, h);
+
+				// Animated lava blobs
+				ctx.globalCompositeOperation = 'lighter';
+				for (var i = 0; i < lavaBlobs.length; i++) {
+					var blob = lavaBlobs[i];
+					blob.x += blob.speedX + Math.sin(lavaTime * 0.7 + blob.phase) * 0.5;
+					blob.y += blob.speedY + Math.cos(lavaTime * 0.5 + blob.phase) * 0.4;
+
+					// Wrap around
+					if (blob.x < -blob.radius) blob.x = w + blob.radius;
+					if (blob.x > w + blob.radius) blob.x = -blob.radius;
+					if (blob.y < -blob.radius) blob.y = h + blob.radius;
+					if (blob.y > h + blob.radius) blob.y = -blob.radius;
+
+					var pulseRadius = blob.radius + Math.sin(lavaTime * blob.pulseSpeed + blob.phase) * 30;
+
+					var grad = ctx.createRadialGradient(blob.x, blob.y, 0, blob.x, blob.y, pulseRadius);
+					var intensity = 0.12 + Math.sin(lavaTime + blob.phase) * 0.05;
+					grad.addColorStop(0, 'rgba(229, 85, 55, ' + (intensity + 0.08) + ')');
+					grad.addColorStop(0.3, 'rgba(200, 50, 30, ' + intensity + ')');
+					grad.addColorStop(0.6, 'rgba(150, 20, 10, ' + (intensity * 0.5) + ')');
+					grad.addColorStop(1, 'rgba(80, 5, 0, 0)');
+
+					ctx.fillStyle = grad;
+					ctx.beginPath();
+					ctx.arc(blob.x, blob.y, pulseRadius, 0, Math.PI * 2);
+					ctx.fill();
+				}
+
+				// Flowing lava waves at bottom
+				ctx.globalCompositeOperation = 'lighter';
+				for (var wave = 0; wave < 3; wave++) {
+					ctx.beginPath();
+					ctx.moveTo(0, h);
+					for (var x = 0; x <= w; x += 5) {
+						var waveY = h - 40 - wave * 25 +
+							Math.sin(x * 0.008 + lavaTime * (1.2 + wave * 0.3)) * 15 +
+							Math.sin(x * 0.015 + lavaTime * 0.8) * 10 +
+							Math.cos(x * 0.005 + lavaTime * 0.5 + wave) * 8;
+						ctx.lineTo(x, waveY);
+					}
+					ctx.lineTo(w, h);
+					ctx.closePath();
+
+					var waveGrad = ctx.createLinearGradient(0, h - 80, 0, h);
+					var waveAlpha = 0.15 - wave * 0.04;
+					waveGrad.addColorStop(0, 'rgba(229, 85, 55, ' + waveAlpha + ')');
+					waveGrad.addColorStop(0.4, 'rgba(229, 120, 40, ' + (waveAlpha + 0.05) + ')');
+					waveGrad.addColorStop(1, 'rgba(200, 50, 20, ' + (waveAlpha + 0.1) + ')');
+					ctx.fillStyle = waveGrad;
+					ctx.fill();
+				}
+
+				// Ember-like bright spots
+				ctx.globalCompositeOperation = 'lighter';
+				for (var e = 0; e < 8; e++) {
+					var ex = (Math.sin(lavaTime * 0.3 + e * 1.7) * 0.5 + 0.5) * w;
+					var ey = (Math.cos(lavaTime * 0.25 + e * 2.1) * 0.5 + 0.5) * h;
+					var eSize = 3 + Math.sin(lavaTime * 2 + e) * 2;
+					var eAlpha = 0.3 + Math.sin(lavaTime * 3 + e * 0.7) * 0.2;
+					var eGrad = ctx.createRadialGradient(ex, ey, 0, ex, ey, eSize * 8);
+					eGrad.addColorStop(0, 'rgba(255, 200, 100, ' + eAlpha + ')');
+					eGrad.addColorStop(0.5, 'rgba(229, 100, 50, ' + (eAlpha * 0.4) + ')');
+					eGrad.addColorStop(1, 'rgba(150, 30, 10, 0)');
+					ctx.fillStyle = eGrad;
+					ctx.beginPath();
+					ctx.arc(ex, ey, eSize * 8, 0, Math.PI * 2);
+					ctx.fill();
+				}
+
+				ctx.globalCompositeOperation = 'source-over';
+
+				lavaAnimationId = requestAnimationFrame(drawLavaBackground);
+			}
+			lavaAnimationId = requestAnimationFrame(drawLavaBackground);
+
+			// ==================== PARTICLE SYSTEM ====================
+			var particlesContainer = document.getElementById('particlesContainer');
+
+			function spawnParticle() {
+				var particle = document.createElement('div');
+				particle.className = 'particle';
+				var size = 2 + Math.random() * 6;
+				var x = Math.random() * window.innerWidth;
+				var y = window.innerHeight - Math.random() * 100;
+				var duration = 2 + Math.random() * 4;
+				var hue = Math.random() > 0.5 ? '0' : '30';
+				particle.style.cssText =
+					'width:' + size + 'px;height:' + size + 'px;' +
+					'left:' + x + 'px;top:' + y + 'px;' +
+					'background:hsl(' + hue + ',' + (70 + Math.random() * 30) + '%,' + (50 + Math.random() * 30) + '%);' +
+					'box-shadow:0 0 ' + (size * 2) + 'px hsl(' + hue + ',80%,50%);' +
+					'animation-duration:' + duration + 's;';
+				particlesContainer.appendChild(particle);
+				setTimeout(function () {
+					if (particle.parentNode) particle.parentNode.removeChild(particle);
+				}, duration * 1000);
+			}
+
+			var particleInterval = setInterval(spawnParticle, 200);
+
+			// ==================== MOUSE GLOW ====================
+			var mouseGlow = document.getElementById('mouseGlow');
+			document.addEventListener('mousemove', function (e) {
+				mouseGlow.style.left = e.clientX + 'px';
+				mouseGlow.style.top = e.clientY + 'px';
+			});
+
+			// ==================== INTERACTIVE CLICK BURST ====================
+			document.addEventListener('click', function (e) {
+				for (var i = 0; i < 8; i++) {
+					var spark = document.createElement('div');
+					spark.className = 'particle';
+					var size = 3 + Math.random() * 5;
+					var angle = (Math.PI * 2 * i) / 8 + Math.random() * 0.5;
+					var dist = 30 + Math.random() * 50;
+					var tx = e.clientX + Math.cos(angle) * dist;
+					var ty = e.clientY + Math.sin(angle) * dist;
+					spark.style.cssText =
+						'width:' + size + 'px;height:' + size + 'px;' +
+						'left:' + e.clientX + 'px;top:' + e.clientY + 'px;' +
+						'background:hsl(' + (Math.random() * 40) + ',90%,60%);' +
+						'box-shadow:0 0 ' + (size * 3) + 'px hsl(20,90%,50%);' +
+						'animation:none;transition:all 0.6s ease-out;opacity:1;';
+					particlesContainer.appendChild(spark);
+					setTimeout(
+						(function (s, tx2, ty2) {
+							return function () {
+								s.style.left = tx2 + 'px';
+								s.style.top = ty2 + 'px';
+								s.style.opacity = '0';
+								s.style.transform = 'scale(0)';
+							};
+						})(spark, tx, ty),
+						10
+					);
+					setTimeout(
+						(function (s) {
+							return function () {
+								if (s.parentNode) s.parentNode.removeChild(s);
+							};
+						})(spark),
+						700
+					);
+				}
+			});
+
+			// ==================== GAME LEVELS ====================
+			var LEVELS = [
 				[
 					'                                                                                                             ',
 					'                                                                                                             ',
@@ -238,57 +755,58 @@
 					'        xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx   x!!!!!!!!!!!!!!!!!!!!!xxx!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!',
 					'                                                  xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx',
 					'                                                                                                              ',
-				], 
+				],
 				[
-    '  x                                                                                                                                                                                                                                    x',
-    '  x    x     x     x   x   x  xxxxxxx      x         xxxxx                                                                                                                                                                   x',
-    '  x   x x    xx    x   x   x  x     x     x x       x                                                                                                                                                                        x',
-    '  x  x   x   x x   x   x   x  x     x    x   x      x                                                                                                                                                                        x',
-    '  x x     x  x  x  x   x   x  xxxxxxx   x     x     x  xxx                                                                                                                                                                   x',
-    '  x xxxxxxx  x   x x   x   x  x   x     xxxxxxx     x    x                                                                                                                                                                   x',
-    '  x x     x  x    xx   x   x  x    x    x     x     x    x                                                                                                                                                                   x',
-    '  x x     x  x     x    xxx   x     x   x     x      xxxx                                                                                                                                                                    x',
-    '  x                                                                                                                                                                                                                                    x',
-    '  x                                                                                                                                                                                                                                    x',
-    '  x           v         v        v         v         v         v           v        v           v         v         v          v          v         v         v         v         v         v         v         v                             x',
-    '  x                                                                                                                                                                                                                                    x',
-    '  x                                                                                                                                                                                                                                    x',
-    '  x  o   o                                                                                                                                                                                                                               x',
-    '  x                                                                                                                                                                                                                                    x',
-    '  x   xx          o                                                                                                                                                                                                                    x',
-    '  x           v              o                                                                                                                                                                                                          x',
-    '  xx        xx          v            o                                                                                                                                                                                                x',
-    '  x                   xx         v              o                                                                                                                                                                                      x',
-    '  x    |                    xx            v               o                                                                                                                                                                           x',
-    '  x                                   xx             v                o                                                                                                                                                                x',
-    '  xx              |                               xx            v                 o                                                                                                                                                     x',
-    '  x                          |                              xx             v                o                                                                                                                                          x',
-    '  x                                      |                             xx            v                 o                                                                                                                               x',
-    '  x                                                  |                            xx             v                o                                                                                                                    x',
-    '  xx   v         v         v         v          v                                             xx            v                 o                                                                                                         x',
-    '  x                                                              |                                    xx             v                o                                                                                                x',
-    '  x                                                                          |                                   xx            v                 o                                                                                     x',
-    '  x                                                                                      |                                  xx             v               o                                                                           x',
-    '  xx                                                                                                  |                                 xx            v                o                                                                x',
-    '  x                                                                                                              |                                xx             v               o                                                    x',
-    '  x   v         v         v         v         v         v         v         v         v                                                                      xx            v                o                                          x',
-    '  x                                                                                                                          |                                         xx             v              o                                 x',
-    '  xx                                                                                                                                     |                                        xx            v               o                      x',
-    '  x                                                                                                                                                  |                                       xx                 x                      x',
-    '  x                                                                                                                                                              |                                   o  o  o                           x',
-    '  x   v         v         v         v         v         v         v         v         v         v         v         v         v         v         v         v                     xxxxxxxxx          xxxxxxx                           x',
-    '  xx                                                                                                                                                                              x!!!!!!!x                                             x',
-    '  x         =            =            =            =            =            =            =            =            =            =            =            =            =         x!!!!!!!x                                             x',
-    '  x                                                                                                                                                                              x!!!!!!!x                                             x',
-    '  x  @                                                                                                                                                                           x!!!!!!!x                                             x',
-    '  x  xx       =            =            =            =            =            =            =            =            =            =            =            =                   x!!!!!!!x                                             x',
-    '  x                                                                                                                                                                              x!!!!!!!x                                             x',
-    '!!x!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!x',
-    '  x                                                                                                                                                                              xxxxxxxxx                                             x',
-    '  x                                                                                                                                                                                                                                    x',
-],
+					'  x                                                                                                                                                                                                                                    x',
+					'  x    x     x     x   x   x  xxxxxxx      x         xxxxx                                                                                                                                                                   x',
+					'  x   x x    xx    x   x   x  x     x     x x       x                                                                                                                                                                        x',
+					'  x  x   x   x x   x   x   x  x     x    x   x      x                                                                                                                                                                        x',
+					'  x x     x  x  x  x   x   x  xxxxxxx   x     x     x  xxx                                                                                                                                                                   x',
+					'  x xxxxxxx  x   x x   x   x  x   x     xxxxxxx     x    x                                                                                                                                                                   x',
+					'  x x     x  x    xx   x   x  x    x    x     x     x    x                                                                                                                                                                   x',
+					'  x x     x  x     x    xxx   x     x   x     x      xxxx                                                                                                                                                                    x',
+					'  x                                                                                                                                                                                                                                    x',
+					'  x                                                                                                                                                                                                                                    x',
+					'  x           v         v        v         v         v         v           v        v           v         v         v          v          v         v         v         v         v         v         v         v                             x',
+					'  x                                                                                                                                                                                                                                    x',
+					'  x                                                                                                                                                                                                                                    x',
+					'  x  o   o                                                                                                                                                                                                                               x',
+					'  x                                                                                                                                                                                                                                    x',
+					'  x   xx          o                                                                                                                                                                                                                    x',
+					'  x           v              o                                                                                                                                                                                                          x',
+					'  xx        xx          v            o                                                                                                                                                                                                x',
+					'  x                   xx         v              o                                                                                                                                                                                      x',
+					'  x    |                    xx            v               o                                                                                                                                                                           x',
+					'  x                                   xx             v                o                                                                                                                                                                x',
+					'  xx              |                               xx            v                 o                                                                                                                                                     x',
+					'  x                          |                              xx             v                o                                                                                                                                          x',
+					'  x                                      |                             xx            v                 o                                                                                                                               x',
+					'  x                                                  |                            xx             v                o                                                                                                                    x',
+					'  xx   v         v         v         v          v                                             xx            v                 o                                                                                                         x',
+					'  x                                                              |                                    xx             v                o                                                                                                x',
+					'  x                                                                          |                                   xx            v                 o                                                                                     x',
+					'  x                                                                                      |                                  xx             v               o                                                                           x',
+					'  xx                                                                                                  |                                 xx            v                o                                                                x',
+					'  x                                                                                                              |                                xx             v               o                                                    x',
+					'  x   v         v         v         v         v         v         v         v         v                                                                      xx            v                o                                          x',
+					'  x                                                                                                                          |                                         xx             v              o                                 x',
+					'  xx                                                                                                                                     |                                        xx            v               o                      x',
+					'  x                                                                                                                                                  |                                       xx                 x                      x',
+					'  x                                                                                                                                                              |                                   o  o  o                           x',
+					'  x   v         v         v         v         v         v         v         v         v         v         v         v         v         v         v         v                     xxxxxxxxx          xxxxxxx                           x',
+					'  xx                                                                                                                                                                              x!!!!!!!x                                             x',
+					'  x         =            =            =            =            =            =            =            =            =            =            =            =            =         x!!!!!!!x                                             x',
+					'  x                                                                                                                                                                              x!!!!!!!x                                             x',
+					'  x  @                                                                                                                                                                           x!!!!!!!x                                             x',
+					'  x  xx       =            =            =            =            =            =            =            =            =            =            =            =                   x!!!!!!!x                                             x',
+					'  x                                                                                                                                                                              x!!!!!!!x                                             x',
+					'!!x!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!         !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!x',
+					'  x                                                                                                                                                                              xxxxxxxxx                                             x',
+					'  x                                                                                                                                                                                                                                    x',
+				],
 			];
 
+			// ==================== GAME ENGINE ====================
 			function Vector(x, y) {
 				this.x = x;
 				this.y = y;
@@ -357,10 +875,7 @@
 						else if (ch === '!') fieldType = 'lava';
 						else if (ch === '|') fieldType = 'lava';
 						else if (ch === '=') fieldType = 'lava';
-						else if (ch === 'v') {
-							fieldType = 'lava';
-							console.log(fieldType);
-						}
+						else if (ch === 'v') fieldType = 'lava';
 						gridLine.push(fieldType);
 					}
 					this.grid.push(gridLine);
@@ -421,13 +936,11 @@
 				this.scrollPlayerIntoView();
 			};
 
-			// clear it later
 			DOMDisplay.prototype.scrollPlayerIntoView = function () {
 				var width = this.wrap.clientWidth;
 				var height = this.wrap.clientHeight;
 				var margin = width / 3;
 
-				// The viewport
 				var left = this.wrap.scrollLeft,
 					right = left + width;
 				var top = this.wrap.scrollTop,
@@ -437,11 +950,9 @@
 				var center = player.pos.plus(player.size.times(0.5)).times(scale);
 
 				if (center.x < left + margin) this.wrap.scrollLeft = center.x - margin;
-				else if (center.x > right - margin)
-					this.wrap.scrollLeft = center.x + margin - width;
+				else if (center.x > right - margin) this.wrap.scrollLeft = center.x + margin - width;
 				if (center.y < top + margin) this.wrap.scrollTop = center.y - margin;
-				else if (center.y > bottom - margin)
-					this.wrap.scrollTop = center.y + margin - height;
+				else if (center.y > bottom - margin) this.wrap.scrollTop = center.y + margin - height;
 			};
 
 			DOMDisplay.prototype.clear = function () {
@@ -473,7 +984,8 @@
 						actor.pos.x < other.pos.x + other.size.x &&
 						actor.pos.y + actor.size.y > other.pos.y &&
 						actor.pos.y < other.pos.y + other.size.y
-					) return other;
+					)
+						return other;
 				}
 			};
 
@@ -545,7 +1057,6 @@
 				var otherActor = level.actorAt(this);
 				if (otherActor) level.playerTouched(otherActor.type, otherActor);
 
-				// Losing animation
 				if (level.status == 'lost') {
 					this.pos.y += step;
 					this.size.y -= step;
@@ -607,13 +1118,17 @@
 				var messageElement = document.getElementById('levelMessage');
 				messageElement.textContent = message;
 				messageElement.style.display = 'block';
-				setTimeout(function() {
+				setTimeout(function () {
 					messageElement.style.display = 'none';
 				}, 4000);
 			}
 
 			function runLevel(level, Display, levelNumber, andThen) {
 				var display = new Display(document.body, level);
+				var indicator = document.getElementById('levelIndicator');
+				indicator.style.display = 'block';
+				indicator.textContent = '🔥 Level ' + levelNumber + ' / ' + LEVELS.length;
+
 				runAnimation(function (step) {
 					level.animate(step, arrows);
 					display.drawFrame(step);
@@ -627,26 +1142,38 @@
 
 			function runGame(plans, Display) {
 				function startLevel(n) {
-					runLevel(new Level(plans[n]), Display, n+1, function (status, levelNumber) {
+					showLevelMessage('Level ' + (n + 1));
+					runLevel(new Level(plans[n]), Display, n + 1, function (status, levelNumber) {
 						if (status == 'lost') {
 							startLevel(n);
 						} else if (n < plans.length - 1) {
-							showLevelMessage('Congratulations! You completed Level ' + levelNumber);
-							setTimeout(function() {
+							showLevelMessage(' Level ' + levelNumber + ' Complete!');
+							setTimeout(function () {
 								startLevel(n + 1);
 							}, 4000);
 						} else {
-							showLevelMessage('🎉 Congratulations! You completed all levels! 🎉\nYou are a true game master!');
+							showLevelMessage('🎉 You conquered all levels! 🎉');
+							document.getElementById('levelIndicator').textContent = '👑 CHAMPION';
 						}
 					});
 				}
 				startLevel(0);
 			}
 
-			document.getElementById('startButton').addEventListener('click', function() {
-				this.style.display = 'none';
-				runGame(LEVELS, DOMDisplay);
+			document.getElementById('startButton').addEventListener('click', function () {
+				var startScreen = document.getElementById('startScreen');
+				startScreen.classList.add('hidden');
+				lavaCanvas.style.opacity = '0.3';
+
+				// Reduce particles during gameplay
+				clearInterval(particleInterval);
+				particleInterval = setInterval(spawnParticle, 800);
+
+				setTimeout(function () {
+					startScreen.style.display = 'none';
+					runGame(LEVELS, DOMDisplay);
+				}, 1000);
 			});
-</script>
+		</script>
 	</body>
 </html>
